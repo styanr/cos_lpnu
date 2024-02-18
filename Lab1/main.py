@@ -3,6 +3,7 @@ import numpy as np
 import fourier as f
 import tkinter as tk
 from tkinter import Label, Entry, Button
+from pathlib import Path
 
 
 class FourierVisualizer:
@@ -14,7 +15,6 @@ class FourierVisualizer:
         self.lower_bound = -10
         self.upper_bound = 10
         self.iterations = 50
-        self.file = open("fourier_series.log", "w")
 
         # Entry widgets for user input
         self.lower_bound_label = Label(master, text="Lower Bound:")
@@ -50,10 +50,12 @@ class FourierVisualizer:
 
         # Generate x values based on user input
         x_values = np.linspace(self.lower_bound, self.upper_bound, 1000)
-
         original_values = [f.f(x) for x in x_values]
-        fourier_values = f.fourier_range(x_values, self.iterations, self.file)
-        self.file.close()
+
+        p = Path(__file__).with_name('fourier.log')
+        with (p.open('w')) as file:
+            fourier_values = f.fourier_range(x_values, self.iterations, file)
+
         # Plotting the original function
         plt.plot(x_values, original_values, label='Original Function')
 
