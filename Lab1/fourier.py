@@ -6,56 +6,99 @@ import scipy.integrate as integrate
 def f(x):
     """The function given in the task."""
     mod = (x + m.pi) % (2 * m.pi) - m.pi
-
-    if -m.pi < mod <= 0:
-        return -1
-    elif 0 < mod <= m.pi:
-        return 0
+    return -1 if -m.pi < mod <= 0 else 0
 
 
-def a_n(n):
-    """The a_n coefficient."""
-    return (1 / m.pi) * integrate.quad(lambda x: f(x) * m.cos(n * x), -m.pi, m.pi)[0]
+def f_2(x):
+    mod = (x + m.pi) % (2 * m.pi) - m.pi
+    # return -1 if -m.pi < mod <= 0 else 0
+    return (mod ** 22) * m.exp((-mod ** 2) / 22)
 
 
-def b_n(n):
-    """The b_n coefficient."""
-    return (1 / m.pi) * integrate.quad(lambda x: f(x) * m.sin(n * x), -m.pi, m.pi)[0]
+def precompute_coefficients(iterations, func, file=None):
+    """
+    Precomputes `a_n` and `b_n` coefficients for all iterations.
+    """
+    a_n = [0] * (iterations + 1)
+    b_n = [0] * (iterations + 1)
+
+    for n in range(iterations + 1):
+        a_n[n] = (1 / m.pi) * integrate.quad(lambda x: func(x)
+                                             * m.cos(n * x), -m.pi, m.pi)[0]
+        b_n[n] = (1 / m.pi) * integrate.quad(lambda x: func(x)
+                                             * m.sin(n * x), -m.pi, m.pi)[0]
+        if file:
+            file.write(
+                f"a_{n} = {a_n[n]}\tb_{n} = {b_n[n]}\n")
+
+    return a_n, b_n
 
 
 def fourier_range(x_values, iterations=50, file=None):
-    """The Fourier series approximation. Logs the generated values if a file is given."""
+    """
+    The Fourier series approximation. Logs the generated values if a file is given.
+    """
+    a_n, b_n = precompute_coefficients(iterations, f, file)
+
     if file:
         file.write(f"Iterations: {iterations:.0f}\n\n")
 
-    fourier_range = [fourier_series(x, iterations, file) for x in x_values]
+    fourier_range = [fourier_series(x, a_n, b_n) for x in x_values]
+    error = absolute_error([f(x) for x in x_values], fourier_range)
 
     if file:
         file.write(
-            f"Absolute error: {absolute_error([f(x) for x in x_values], fourier_range)}\n")
+            f"Absolute error: {error}\n")
 
-    return fourier_range
+    return fourier_range, error
 
 
-def fourier_series(x, iterations=50, file=None):
-    """The Fourier series. Logs the a_n and b_n coefficients if a file is given."""
-    a_0 = a_n(0)
-    sum = 0
-    n = 1
-
-    while n <= iterations:
-        sum += a_n(n) * m.cos(n * x) + b_n(n) * m.sin(n * x)
-        if file:
-            file.write(f"a[{n:2d}]: {a_n(n)}\tb[{n:2d}]: {b_n(n)}\n")
-
-        n += 1
+def fourier_range_2(x_values, iterations=50, file=None):
+    """
+    The Fourier series approximation. Logs the generated values if a file is given.
+    """
+    a_n, b_n = precompute_coefficients(iterations, f_2, file)
 
     if file:
-        file.write("\n")
+        file.write(f"Iterations: {iterations:.0f}\n\n")
 
-    return a_0 / 2 + sum
+    fourier_range = [fourier_series(x, a_n, b_n) for x in x_values]
+    error = relative_error([f_2(x) for x in x_values], fourier_range)
+
+    if file:
+        file.write(
+            f"Relative error: {error}\n")
+
+    return fourier_range, error
+
+
+def fourier_series(x, a_n, b_n):
+    """
+    The Fourier series. Logs the a_n and b_n coefficients if a file is given.
+    """
+    sum = 0
+    for n in range(1, len(a_n)):
+        sum += a_n[n] * m.cos(n * x) + b_n[n] * m.sin(n * x)
+
+    return a_n[0] / 2 + sum
 
 
 def absolute_error(F, Fourier):
-    """The absolute error."""
+    """
+    The absolute error.
+    """
     return mean(abs(f - fourier) for f, fourier in zip(F, Fourier))
+
+
+def relative_error(F, Fourier):
+    """
+    The relative error.
+    """
+    total_error = 0
+    count = 0
+
+    for f, fourier in zip(F, Fourier):
+        total_error += abs(f - fourier) / max(abs(f), abs(fourier))
+        count += 1
+
+    return total_error / count

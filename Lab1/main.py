@@ -12,8 +12,8 @@ class FourierVisualizer:
         self.master.title("Fourier Series Visualizer")
 
         # Default bounds and precision
-        self.lower_bound = -10
-        self.upper_bound = 10
+        self.lower_bound = -3.13
+        self.upper_bound = 3.13
         self.iterations = 50
 
         # Entry widgets for user input
@@ -29,6 +29,14 @@ class FourierVisualizer:
         self.iterations_entry = Entry(master)
         self.iterations_entry.insert(0, str(self.iterations))
 
+        self.function_choice_label = Label(master, text="Choose a function:")
+        self.function_choice = tk.StringVar()
+        self.function_choice.set("f")
+        self.function_choice_f = tk.Radiobutton(
+            master, text="f(x)", variable=self.function_choice, value="f")
+        self.function_choice_f_2 = tk.Radiobutton(
+            master, text="f_2(x)", variable=self.function_choice, value="f_2")
+
         # Button to trigger visualization
         self.visualize_button = Button(
             master, text="Visualize", command=self.visualize)
@@ -40,7 +48,10 @@ class FourierVisualizer:
         self.upper_bound_entry.grid(row=1, column=1, padx=10, pady=5)
         self.iterations_label.grid(row=2, column=0, padx=10, pady=5)
         self.iterations_entry.grid(row=2, column=1, padx=10, pady=5)
-        self.visualize_button.grid(row=3, column=0, columnspan=2, pady=10)
+        self.function_choice_label.grid(row=3, column=0, padx=10, pady=5)
+        self.function_choice_f.grid(row=4, column=0, padx=10, pady=5)
+        self.function_choice_f_2.grid(row=4, column=1, padx=10, pady=5)
+        self.visualize_button.grid(row=5, column=0, columnspan=2, pady=10)
 
     def visualize(self):
         # Get user input values
@@ -50,11 +61,18 @@ class FourierVisualizer:
 
         # Generate x values based on user input
         x_values = np.linspace(self.lower_bound, self.upper_bound, 1000)
-        original_values = [f.f(x) for x in x_values]
+        # original_values = [f.f(x) for x in x_values]
+        original_values = [f.f(x) if self.function_choice.get(
+        ) == "f" else f.f_2(x) for x in x_values]
 
         p = Path(__file__).with_name('fourier.log')
         with (p.open('w')) as file:
-            fourier_values = f.fourier_range(x_values, self.iterations, file)
+            if self.function_choice.get() == "f":
+                fourier_values, error = f.fourier_range(
+                    x_values, self.iterations, file)
+            else:
+                fourier_values, error = f.fourier_range_2(
+                    x_values, self.iterations, file)
 
         # Plotting the original function
         plt.plot(x_values, original_values, label='Original Function')
@@ -63,12 +81,18 @@ class FourierVisualizer:
         plt.plot(x_values, fourier_values,
                  label='Fourier Series Approximation')
 
+        ax = plt.gca()
+
+        y_margin = 0.15 * max(np.absolute(original_values))
+        ax.set_ylim(min(original_values) - y_margin,
+                    max(original_values) + y_margin)
+
         plt.xlabel('x')
         plt.ylabel('f(x)')
         plt.suptitle(
             f'Visualization of Original Function and Fourier Series Approximation')
         plt.title(
-            f"N={self.iterations}\nAverage Absolute Error: {f.absolute_error(original_values, fourier_values):.4f}")
+            f"N={self.iterations}\nAverage {'Absolute' if self.function_choice == 'f' else 'Relative'} Error: {error:.4f}")
         plt.legend()
         plt.grid(True)
         plt.show()
