@@ -28,6 +28,10 @@ def fourier_range(x, N, a, b):
                               b[k] * math.sin(k * x[i]) for k in range(1, N + 1)])
     return f
 
+def fourier_point(x, N, a, b):
+    f = a[0] / 2 + sum([a[k] * math.cos(k * x) +
+                        b[k] * math.sin(k * x) for k in range(1, N + 1)])
+    return f
 
 def least_squares_polyfit(x, y, degree=2):
     if len(x) != len(y):
