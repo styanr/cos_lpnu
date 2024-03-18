@@ -68,10 +68,10 @@ class FourierVisualizer:
         p = Path(__file__).with_name('fourier.log')
         with (p.open('w')) as file:
             if self.function_choice.get() == "f":
-                fourier_values, error = f.fourier_range(
+                fourier_values, error, quad_error = f.fourier_range(
                     x_values, self.iterations, file)
             else:
-                fourier_values, error = f.fourier_range_2(
+                fourier_values, error, quad_error = f.fourier_range_2(
                     x_values, self.iterations, file)
 
         # Plotting the original function
@@ -92,7 +92,7 @@ class FourierVisualizer:
         plt.suptitle(
             f'Visualization of Original Function and Fourier Series Approximation')
         plt.title(
-            f"N={self.iterations}\nAverage {'Absolute' if self.function_choice == 'f' else 'Relative'} Error: {error:.4f}")
+            f"N={self.iterations}\nAverage {'Absolute' if self.function_choice == 'f' else 'Relative'} Error: {error:.4f}\nQuadratic error: {quad_error:.4f}")
         plt.legend()
         plt.grid(True)
         plt.show()

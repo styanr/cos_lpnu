@@ -45,12 +45,13 @@ def fourier_range(x_values, iterations=50, file=None):
 
     fourier_range = [fourier_series(x, a_n, b_n) for x in x_values]
     error = absolute_error([f(x) for x in x_values], fourier_range)
+    quad_error = quadratic_error(a_n, b_n)
 
     if file:
         file.write(
             f"Absolute error: {error}\n")
 
-    return fourier_range, error
+    return fourier_range, error, quad_error
 
 
 def fourier_range_2(x_values, iterations=50, file=None):
@@ -64,12 +65,13 @@ def fourier_range_2(x_values, iterations=50, file=None):
 
     fourier_range = [fourier_series(x, a_n, b_n) for x in x_values]
     error = relative_error([f_2(x) for x in x_values], fourier_range)
+    quad_error = quadratic_error(a_n, b_n)
 
     if file:
         file.write(
             f"Relative error: {error}\n")
 
-    return fourier_range, error
+    return fourier_range, error, quad_error
 
 
 def fourier_series(x, a_n, b_n):
@@ -102,3 +104,10 @@ def relative_error(F, Fourier):
         count += 1
 
     return total_error / count
+
+
+def quadratic_error(a_n, b_n):
+    """
+    The quadratic error.
+    """
+    return 1 / (2 * m.pi) * integrate.quad(lambda x: (f(x)**2), -m.pi, m.pi)[0] - a_n[0]**2 / 4 - 0.5 * sum(a_n[n]**2 + b_n[n]**2 for n in range(1, len(a_n)))
