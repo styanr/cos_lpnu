@@ -35,18 +35,49 @@ def fourier_point(x, a, b):
     return f
 
 
-def least_squares_polyfit(x, y, degree=2):
+def least_squares_polyfit(x, y, degree):
     if len(x) != len(y):
         raise ValueError("Input arrays x and y must have the same length.")
 
-    b = np.array(y)
-    x_values = np.array(x)
+    n = len(x)
+    m = degree + 1  # Number of coefficients
 
-    A = np.vander(x_values, degree + 1, increasing=True)
+    # Build the Vandermonde matrix
+    A = [[0 for _ in range(m)] for _ in range(n)]
+    for i in range(n):
+        for j in range(m):
+            A[i][j] = x[i] ** (m - j - 1)
 
-    coefficients = np.linalg.lstsq(A, b.T, rcond=None)[0]
+    # Build the b vector
+    b = y.copy()
 
-    print(coefficients)
+    # Solve the normal equations: (A^T A) c = A^T b
+    AT = [[sum(A[k][j] * A[k][i] for k in range(n))
+           for j in range(m)] for i in range(m)]
+    ATb = [sum(A[k][i] * b[k] for k in range(n)) for i in range(m)]
+
+    # Gaussian elimination to solve (A^T A) c = A^T b
+    for i in range(m):
+        pivot = i
+        for j in range(i + 1, m):
+            if abs(AT[j][i]) > abs(AT[pivot][i]):
+                pivot = j
+
+        AT[i], AT[pivot] = AT[pivot], AT[i]
+        ATb[i], ATb[pivot] = ATb[pivot], ATb[i]
+
+        for j in range(i + 1, m):
+            factor = AT[j][i] / AT[i][i]
+            for k in range(i + 1, m):
+                AT[j][k] -= factor * AT[i][k]
+            ATb[j] -= factor * ATb[i]
+
+    # Back-substitution
+    coefficients = [0 for _ in range(m)]
+    coefficients[m - 1] = ATb[m - 1] / AT[m - 1][m - 1]
+    for i in range(m - 2, -1, -1):
+        coefficients[i] = (ATb[i] - sum(AT[i][j] * coefficients[j]
+                           for j in range(i + 1, m))) / AT[i][i]
 
     return coefficients
 

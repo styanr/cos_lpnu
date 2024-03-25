@@ -8,7 +8,7 @@ x = np.linspace(-math.pi + (2 * math.pi / (len(y) + 1)),
 x_fourier = np.linspace(-math.pi, math.pi, 1000)
 
 approx = least_squares_polyfit(x, y, 2)
-least_squares_approx = np.polyval(approx[::-1], x_fourier)
+least_squares_approx = np.polyval(approx, x_fourier)
 
 N = 6
 
